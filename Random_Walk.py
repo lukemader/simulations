@@ -2,6 +2,7 @@ import random
 import re
 import pickle
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 
 class Random_Walk():
@@ -90,7 +91,7 @@ class Random_Walk():
         path = [next(step) for i in range(self.number_of_steps)]
         return (path)
 
-    def graph(self, path = None, name = "random_walk.jpg", save_pickle = False):
+    def graph(self, path = None, name = "random_walk", anim = False, save_pickle = False):
         """class method Random_Walk.graph
         Method to call correct graphing function
         PARAMETERS:
@@ -98,20 +99,20 @@ class Random_Walk():
                 - if none: assume that user wants default path self.path
             - file name:            string name
                 - if none, call "random_walk.jpg"
-            - create pickle file?:  bool save_pickle
+            - animated graph:       bool anim
+                - if none, assume False
+            - create pickle file:  bool save_pickle
                 - if none, assume False
             RETURN:
                 - None
                 - Calls correct graphing function, which will return True and save image file of graph
         """
         # input handling:
-        # acceptable name extensions: jpg. jpeg, png
-        # if name has wrong extension type, get rid of extension type
-        # if name has no extension type, no issue as matplotlib will default to png
-        # if no path specified, set to default path
-        if not name.endswith(('jpg', 'jpeg', 'png')):
-            if "." in name:
-                name = name.split('.', 1)[0]
+        # if animated graph but file name doesn't end with gif,
+        # change filename to have .gif
+        if (anim and not name.endswith(('gif'))):
+            name = name.split('.', 1)[0]
+            name += ".gif"
         if path == None: path = self.path
 
         # call graphing function based on if 1D, 2D or 3D starting position
@@ -120,22 +121,23 @@ class Random_Walk():
             # so create time stamps and plot
             x = [i for i in range(0, self.number_of_steps)]
             path = [[x[i], path[i]] for i in range(self.number_of_steps)]
-            self.graph_2D(path, name, save_pickle)
+            self.graph_2d(path, name, anim, save_pickle)
         elif len(self.starting_position) == 2:
-            self.graph_2D(path, name, save_pickle)
+            self.graph_2d(path, name, anim, save_pickle)
         elif len(self.starting_position) == 3:
-            self.graph_3D(path, name, save_pickle)
+            self.graph_3d(path, name, anim, save_pickle)
         else:
             raise ValueError('Starting position must be 1-dimensional, 2-dimensional or '
                              '3-dimensional for a graph of the walk to be generated.')
 
-    def graph_2D(self, path, name, save_pickle):
+    def graph_2d(self, path, name, anim, save_pickle):
         """class method Random_Walk.graph_2D
         Used by: Random_Walk.graph
         Method to create image file of graph of 2D walk
         PARAMETERS:
             - path:         float 2D array path
             - name:         string name
+            - anim:         bool
             - save_pickle:  bool
         RETURN:
             - True
@@ -146,28 +148,35 @@ class Random_Walk():
         y = [position[1] for position in path]
 
         #plot and save plot
-        plt.plot(x, y)
-        plt.savefig(name)
+        fig, ax = plt.subplots()
+        if anim:        #  animated plot
+            # update function
+            def animate(num, x, y, line):
+                line.set_data(x[:num], y[:num])
+                line.axes.axis([min(x), max(x),min(y), max(y)])
+                return line,
 
-        if save_pickle == True:
-            # if user wants to save pickle of plot,
-            # get rid of extension from name,
-            # add correct pickle extension
-            # extract the figure and save
-            if "." in name:
-                name = name.split('.', 1)[0]
-            name += '.fig.pickle'
-            fig = plt.figure()
-            pickle.dump(fig, open(name, 'wb'))
+            # set up line, animate, and save
+            line, = ax.plot(x, y)
+
+            ani = animation.FuncAnimation(fig, animate, len(x), fargs=[x, y, line], interval=25, blit=True)
+            ani.save(name)
+        else:           # static plot
+            plt.plot(x, y)
+            plt.savefig(name)
+
+        if save_pickle:
+            self.save_fig_pickle(fig, name)
 
         return True
-    def graph_3D(self, path, name, save_pickle):
+    def graph_3d(self, path, name, anim, save_pickle):
         """class method Random_Walk.graph_3D
             Used by: Random_Walk.graph
             Method to create image file of graph of 3D walk
             PARAMETERS:
                 - path:         float 2D array path
                 - name:         string name
+                - anim:         bool
                 - save_pickle:  bool
             RETURN:
                 - True
@@ -181,17 +190,45 @@ class Random_Walk():
         # 3d plot and save plot
         fig = plt.figure()
         ax = plt.axes(projection="3d")
-        ax.plot(x, y, z)
-        plt.savefig(name)
+        if anim:        # animated plot
+            # update function
+            def animate(num, x, y, z, line):
+                line.set_data(x[:num], y[:num])
+                line.set_3d_properties(z[:num])
+                return line
+
+            # set up line, animate, and save
+            line, = plt.plot(x, y, z)
+
+            ani = animation.FuncAnimation(fig, animate, len(x), fargs=[x, y, z, line], interval=25)
+            ani.save(name)
+        else:           # static plot
+            ax.plot(x, y, z)
+            plt.savefig(name)
 
         if save_pickle == True:
-            # if user wants to save pickle of plot,
-            # get rid of extension from name,
-            # add correct pickle extension
-            # save figure
-            if "." in name:
-                name = name.split('.', 1)[0]
-            name += '.fig.pickle'
-            pickle.dump(fig, open(name, 'wb'))
+            self.save_fig_pickle(fig, name)
+
+        return True
+
+    def save_fig_pickle(self, fig, name):
+        """class method Random_Walk.save_fig_pickle
+                    Used by: Random_Walk.graph_2d and Random_Walk.graph_3d
+                    Method to create pickle of graph of walk
+                    PARAMETERS:
+                        - figure:     fig
+                        - name:       string name
+                    RETURN:
+                        - True
+                        - Saves pickle of figure
+                """
+        # if user wants to save pickle of plot,
+        # get rid of extension from name,
+        # add correct pickle extension
+        # save figure
+        if "." in name:
+            name = name.split('.', 1)[0]
+        name += '.fig.pickle'
+        pickle.dump(fig, open(name, 'wb'))
 
         return True
