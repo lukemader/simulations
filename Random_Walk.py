@@ -10,6 +10,7 @@ class Random_Walk():
     Class to model a discrete random walk.
     Features:
         - Simulate random walk based on position, possible moves, and probability distribution of moves.
+        - Graph a 2D or 3D static or animated plot.
     """
     def __init__(self, start = [0,0], n=100, moves = None, p = None):
         """class method Random_Walk.__init__
@@ -57,7 +58,7 @@ class Random_Walk():
     def step(self, p = None):
         """class method Random_Walk.step
         Generator method to create sequence of random walks.
-        Usese random.choices() to choose the random moves based on some inputted possibility distro p
+        Uses random.choices() to choose the random moves based on some inputted possibility distro p
         PARAMETERS:
             - probability distribution:     float array p
                 - if none: assume initiated probability distribution (default is uniform)
@@ -103,9 +104,9 @@ class Random_Walk():
                 - if none, assume False
             - create pickle file:  bool save_pickle
                 - if none, assume False
-            RETURN:
-                - None
-                - Calls correct graphing function, which will return True and save image file of graph
+        RETURN:
+            - None
+            - Calls correct graphing function, which will return True and save image file of graph
         """
         # input handling:
         # if animated graph but file name doesn't end with gif,
@@ -171,16 +172,16 @@ class Random_Walk():
         return True
     def graph_3d(self, path, name, anim, save_pickle):
         """class method Random_Walk.graph_3D
-            Used by: Random_Walk.graph
-            Method to create image file of graph of 3D walk
-            PARAMETERS:
-                - path:         float 2D array path
-                - name:         string name
-                - anim:         bool
-                - save_pickle:  bool
-            RETURN:
-                - True
-                - Saves 3D plot of path and potentially saves pickle of plot
+        Used by: Random_Walk.graph
+        Method to create image file of graph of 3D walk
+        PARAMETERS:
+            - path:         float 2D array path
+            - name:         string name
+            - anim:         bool
+            - save_pickle:  bool
+        RETURN:
+            - True
+            - Saves 3D plot of path and potentially saves pickle of plot
         """
         # extract x,y, and z values from each position in plot
         x = [position[0] for position in path]
@@ -213,15 +214,15 @@ class Random_Walk():
 
     def save_fig_pickle(self, fig, name):
         """class method Random_Walk.save_fig_pickle
-                    Used by: Random_Walk.graph_2d and Random_Walk.graph_3d
-                    Method to create pickle of graph of walk
-                    PARAMETERS:
-                        - figure:     fig
-                        - name:       string name
-                    RETURN:
-                        - True
-                        - Saves pickle of figure
-                """
+        Used by: Random_Walk.graph_2d and Random_Walk.graph_3d
+        Method to create pickle of graph of walk
+        PARAMETERS:
+            - figure:     fig
+            - name:       string name
+        RETURN:
+            - True
+            - Saves pickle of figure
+         """
         # if user wants to save pickle of plot,
         # get rid of extension from name,
         # add correct pickle extension
@@ -231,4 +232,4 @@ class Random_Walk():
         name += '.fig.pickle'
         pickle.dump(fig, open(name, 'wb'))
 
-        return True
+        return(True)
