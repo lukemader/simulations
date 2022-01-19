@@ -232,4 +232,4 @@ class Random_Walk():
         name += '.fig.pickle'
         pickle.dump(fig, open(name, 'wb'))
 
-        return(True)
+        return True
